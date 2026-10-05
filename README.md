@@ -1,6 +1,6 @@
 # DarkInject
 
-**English** &nbsp;|&nbsp; [中文版 →](https://github.com/ETOH-ui/DarkInject)
+**English** &nbsp;|&nbsp; [中文版 →](https://github.com/ETOH-ui/DarkInject-CN)
 
 > Modular, general-purpose, high-speed SQL injection exploitation toolkit
 >
