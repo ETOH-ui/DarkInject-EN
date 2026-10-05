@@ -1,0 +1,32 @@
+# moectf 2026 · Web Security & Penetration Testing · "Notorious Bandit"
+# The additional condition given in the original challenge (a filter list), transcribed verbatim; nothing was changed except this comment.
+# Semantics: reject on match (presence), no substitution, case-insensitive, and keyword nesting does not help either.
+# See writeup_moectf_archive.md in the same directory for details.
+BLACKLIST = [
+    "union",
+    "sleep",
+    "benchmark",
+    "get_lock",
+    "release_lock",
+    "extractvalue",
+    "updatexml",
+    "load_file",
+    "outfile",
+    "dumpfile",
+    " into ",
+    "insert",
+    "update",
+    "delete",
+    "drop",
+    "alter",
+    "create",
+    "replace",
+    "truncate",
+    "handler",
+    "procedure",
+    "--",
+    "/*",
+    "*/",
+    "#",
+    ";",
+]
